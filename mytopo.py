@@ -1,20 +1,22 @@
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.node import Node
-from mininet.log import setLogLevel, info
 from mininet.cli import CLI
+from mininet.log import setLogLevel, info
+from utils import *
 
 
 class LinuxRouter(Node):
-    def config(topo, **params):
-        super(LinuxRouter, topo).config(**params)
+    def config(self, **params):
+        super(LinuxRouter, self).config(**params)
 
-        # Enable forwarding on the router
-        topo.cmd('sysctl net.ipv4.ip_forward=1')
+        # Enable ip forwarding on the router so that packet at one interface is forwarded 
+        # to the appropriate interface on the same router
+        self.cmd('sysctl -w net.ipv4.ip_forward=1')
 
-    def terminate(topo):
-        topo.cmd('sysctl net.ipv4.ip_forward=0')
-        super(LinuxRouter, topo).terminate()
+    def terminate(self):
+        self.cmd('sysctl -w net.ipv4.ip_forward=0')
+        super(LinuxRouter, self).terminate()
 
 
 class Config:
@@ -26,36 +28,109 @@ class Config:
     @staticmethod
     def setup():
         Config.intf_ip = {
-            'r1-eth0': '10.0.0.1',
-            'r1-eth1': '10.0.2.1',
-            'r1-eth2': '10.0.3.1',
-            'r2-eth0': '10.0.2.2',
-            'r2-eth1': '10.0.4.1',
-            'r3-eth0': '10.0.3.2',
-            'r3-eth1': '10.0.5.1',
-            'r4-eth0': '10.0.1.1',
-            'r4-eth1': '10.0.5.2',
-            'r4-eth2': '10.0.4.2',
+            'r1-eth0': '62.0.0.1/8',
+            'r1-eth1': '63.0.0.1/8',
+            'r1-eth2': '67.0.0.1/8',
+            'r2-eth0': '63.0.0.2/8',
+            'r2-eth1': '64.0.0.1/8',
+            'r3-eth0': '67.0.0.2/8',
+            'r3-eth1': '66.0.0.1/8',
+            'r4-eth0': '65.0.0.1/8',
+            'r4-eth1': '64.0.0.2/8',
+            'r4-eth2': '66.0.0.2/8',
         }
 
         Config.host_ip = {
-            'h1': '10.0.0.2',
-            'h2': '10.0.1.2'
+            'h1': '62.0.0.2/8',
+            'h2': '65.0.0.2/8'
         }
 
-        Config.route_config = [
-            {'router':'r1', 'src': Config.intf_ip['r1-eth0'], 'dst':Config.host_ip['h2'], 'next-hop': Config.intf_ip['r1-eth1']},
-            {'router':'r1', 'src': Config.intf_ip['r1-eth1'], 'dst':Config.host_ip['h2'], 'next-hop': Config.intf_ip['r2-eth0']},
-            {'router':'r2', 'src': Config.intf_ip['r2-eth0'], 'dst':Config.host_ip['h2'], 'next-hop': Config.intf_ip['r2-eth1']},
-            {'router':'r2', 'src': Config.intf_ip['r2-eth1'], 'dst':Config.host_ip['h2'], 'next-hop': Config.intf_ip['r4-eth1']},
-            {'router':'r4', 'src': Config.intf_ip['r4-eth1'], 'dst':Config.host_ip['h2'], 'next-hop': Config.intf_ip['r4-eth0']},
+        # next-hop and src-interface should be on same network for ip-route to work
+        # you don't have to add routes between interfaces of the same router
 
-            {'router':'r4', 'src': Config.intf_ip['r4-eth0'], 'dst':Config.host_ip['h1'], 'next-hop': Config.intf_ip['r4-eth2']},
-            {'router':'r4', 'src': Config.intf_ip['r4-eth2'], 'dst':Config.host_ip['h1'], 'next-hop': Config.intf_ip['r3-eth1']},
-            {'router':'r3', 'src': Config.intf_ip['r3-eth1'], 'dst':Config.host_ip['h1'], 'next-hop': Config.intf_ip['r3-eth0']},
-            {'router':'r3', 'src': Config.intf_ip['r3-eth0'], 'dst':Config.host_ip['h1'], 'next-hop': Config.intf_ip['r1-eth2']},
-            {'router':'r1', 'src': Config.intf_ip['r1-eth2'], 'dst':Config.host_ip['h1'], 'next-hop': Config.intf_ip['r1-eth0']},
+        Config.route_config = [
+
+            {
+                'node':'h1', 
+                'dst-network':'default', 
+                'next-hop-ip':Config.intf_ip['r1-eth0'], 
+                'src-exit-interface':'h1-eth0',
+            },
+            {
+                'node':'h2', 
+                'dst-network':'default', 
+                'next-hop-ip':Config.intf_ip['r4-eth0'], 
+                'src-exit-interface':'h2-eth0',
+            },
+
+            {
+                'node':'r1', 
+                'dst-network':get_network_addr(Config.intf_ip['r3-eth1']), 
+                'next-hop-ip':Config.intf_ip['r3-eth0'], 
+                'src-exit-interface':'r1-eth2'
+            },
+            {
+                'node':'r1', 
+                'dst-network':'default', 
+                'next-hop-ip':Config.intf_ip['r2-eth0'], 
+                'src-exit-interface':'r1-eth1',
+            },
+
+            {
+                'node':'r2', 
+                'dst-network':get_network_addr(Config.intf_ip['r1-eth0']), 
+                'next-hop-ip':Config.intf_ip['r1-eth1'], 
+                'src-exit-interface':'r2-eth0',
+            },
+            {
+                'node':'r2', 
+                'dst-network':get_network_addr(Config.intf_ip['r1-eth2']), 
+                'next-hop-ip':Config.intf_ip['r1-eth1'], 
+                'src-exit-interface':'r2-eth0',
+            },
+            {
+                'node':'r2', 
+                'dst-network':'default', 
+                'next-hop-ip':Config.intf_ip['r4-eth1'], 
+                'src-exit-interface':'r2-eth1',
+            },
+
+            {
+                'node':'r3', 
+                'dst-network':get_network_addr(Config.intf_ip['r1-eth0']), 
+                'next-hop-ip':Config.intf_ip['r1-eth2'], 
+                'src-exit-interface':'r3-eth0',
+            },
+            {
+                'node':'r3', 
+                'dst-network':get_network_addr(Config.intf_ip['r1-eth1']), 
+                'next-hop-ip':Config.intf_ip['r1-eth2'], 
+                'src-exit-interface':'r3-eth0',
+            },
+            {
+                'node':'r3', 
+                'dst-network':'default', 
+                'next-hop-ip':Config.intf_ip['r4-eth2'], 
+                'src-exit-interface':'r3-eth1',
+            },
+
+            {#un
+                'node':'r4', 
+                'dst-network':get_network_addr(Config.intf_ip['r3-eth0']), 
+                'next-hop-ip':Config.intf_ip['r3-eth1'], 
+                'src-exit-interface':'r4-eth2'
+            },
+            {#un
+                'node':'r4', 
+                'dst-network':'default', 
+                'next-hop-ip':Config.intf_ip['r2-eth1'], 
+                'src-exit-interface':'r4-eth1',
+            },
+
+            
+            
         ]
+
 
 
 class NetworkTopo(Topo):
@@ -63,39 +138,39 @@ class NetworkTopo(Topo):
     def build(self):
 
         # Add 4 routers in two different subnets
-        r1 = self.addHost('r1', cls=LinuxRouter, ip=Config.intf_ip['r1-eth0']+"/24")
-        r2 = self.addHost('r2', cls=LinuxRouter, ip=Config.intf_ip['r2-eth0']+"/24")
-        r3 = self.addHost('r3', cls=LinuxRouter, ip=Config.intf_ip['r3-eth0']+"/24")
-        r4 = self.addHost('r4', cls=LinuxRouter, ip=Config.intf_ip['r4-eth0']+"/24")
+        r1 = self.addHost('r1', cls=LinuxRouter, ip=None)
+        r2 = self.addHost('r2', cls=LinuxRouter, ip=None)
+        r3 = self.addHost('r3', cls=LinuxRouter, ip=None)
+        r4 = self.addHost('r4', cls=LinuxRouter, ip=None)
 
         # Add hosts
-        h1 = self.addHost('h1', ip=Config.host_ip['h1']+"/24")
-        h2 = self.addHost('h2', ip=Config.host_ip['h2']+"/24")
+        h1 = self.addHost('h1', intfName="h1-eth0", ip=Config.host_ip['h1'])
+        h2 = self.addHost('h2', intfName="h2-eth0", ip=Config.host_ip['h2'])
 
         # linking hosts to the routers
-        self.addLink(h1, r1, intfName2="r1-eth0", params2={'ip':Config.intf_ip['r1-eth0']+"/24"})
-        self.addLink(h2, r4, intfName2="r4-eth0", params2={'ip':Config.intf_ip['r4-eth0']+"/24"})
+        self.addLink(h1, r1, intfName2="r1-eth0", params2={'ip':Config.intf_ip['r1-eth0']})
+        self.addLink(h2, r4, intfName2="r4-eth0", params2={'ip':Config.intf_ip['r4-eth0']})
 
         # linking routers amongst themselves
         self.addLink(r1,r2, 
                     intfName1="r1-eth1", intfName2="r2-eth0", 
-                    params1={'ip':Config.intf_ip['r1-eth1']+"/24"}, 
-                    params2={'ip':Config.intf_ip['r2-eth0']+"/24"})
+                    params1={'ip':Config.intf_ip['r1-eth1']}, 
+                    params2={'ip':Config.intf_ip['r2-eth0']})
 
         self.addLink(r1,r3, 
                     intfName1="r1-eth2", intfName2="r3-eth0", 
-                    params1={'ip':Config.intf_ip['r1-eth2']+"/24"}, 
-                    params2={'ip':Config.intf_ip['r3-eth0']+"/24"})
+                    params1={'ip':Config.intf_ip['r1-eth2']}, 
+                    params2={'ip':Config.intf_ip['r3-eth0']})
 
         self.addLink(r2,r4, 
                     intfName1="r2-eth1", intfName2="r4-eth1", 
-                    params1={'ip':Config.intf_ip['r2-eth1']+"/24"}, 
-                    params2={'ip':Config.intf_ip['r4-eth2']+"/24"})
+                    params1={'ip':Config.intf_ip['r2-eth1']}, 
+                    params2={'ip':Config.intf_ip['r4-eth2']})
 
         self.addLink(r3,r4, 
                     intfName1="r3-eth1", intfName2="r4-eth2", 
-                    params1={'ip':Config.intf_ip['r3-eth1']+"/24"}, 
-                    params2={'ip':Config.intf_ip['r4-eth1']+"/24"})
+                    params1={'ip':Config.intf_ip['r3-eth1']}, 
+                    params2={'ip':Config.intf_ip['r4-eth1']})
 
 
 def run():
@@ -118,33 +193,34 @@ def run():
     # Add routing for reaching networks that aren't directly connected
 
     for config in Config.route_config:
-        src_interface = config['src']
-        router = config['router']
-        dst_host = config['dst']
-        next_hop_interface = config['next-hop']
-        cmd = "ip route add "+dst_host+" via "+next_hop_interface+" dev "+src_interface
+        src_interface = config['src-exit-interface']
+        router = config['node']
+        dst_host = config['dst-network']
+        next_hop_interface = config['next-hop-ip']
+        cmd = "ip route add "+dst_host+" via "+next_hop_interface.split("/")[0]+" dev "+src_interface.split("/")[0]
+        print(cmd)
         info(net[router].cmd(cmd))
     
 
     net.start()
-    info( '\n########### Routing Table of r1: ###########\n' )
-    info( net['r1'].cmd('route') )
+    #net.pingAll()
+    #info( '\n########### Routing Table of r1: ###########\n' )
+    #info( net['r1'].cmd('route') )
 
-    info( '\n########### Routing Table of r2: ###########\n' )
-    info( net['r2'].cmd('route') )
+    #info( '\n########### Routing Table of r2: ###########\n' )
+    #info( net['r2'].cmd('route') )
 
-    info( '\n########### Routing Table of r3: ###########\n' )
-    info( net['r3'].cmd('route') )
+    #info( '\n########### Routing Table of r3: ###########\n' )
+    #info( net['r3'].cmd('route') )
 
-    info( '\n########### Routing Table of r4: ###########\n' )
-    info( net['r4'].cmd('route') )
+    #info( '\n########### Routing Table of r4: ###########\n' )
+    #info( net['r4'].cmd('route') )
 
-    info( '\n########### h1 pinging h2 ###########\n' )
-    info( net['h1'].cmd('traceroute 10.0.1.2'))
+    #info( '\n########### Tracing route h1 -> h2 ###########\n' )
+    #info( net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0]))
 
-    info( '\n########### h2 pinging h1 ###########\n' )
-    info( net['h2'].cmd('traceroute 10.0.0.2'))
-
+    #info( '\n########### Tracing route h2 -> h1 ###########\n' )
+    #info( net['h2'].cmd('traceroute -m 5 ' + Config.host_ip['h1'].split("/")[0]))
     CLI(net)
     net.stop()
 
