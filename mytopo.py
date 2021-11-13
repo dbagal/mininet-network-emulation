@@ -65,69 +65,45 @@ class Config:
 
             {
                 'node':'r1', 
-                'dst-network':get_network_addr(Config.intf_ip['r3-eth1']), 
-                'next-hop-ip':Config.intf_ip['r3-eth0'], 
-                'src-exit-interface':'r1-eth2'
-            },
-            {
-                'node':'r1', 
                 'dst-network':'default', 
                 'next-hop-ip':Config.intf_ip['r2-eth0'], 
-                'src-exit-interface':'r1-eth1',
+                'src-exit-interface':'r1-eth1'
             },
 
             {
                 'node':'r2', 
-                'dst-network':get_network_addr(Config.intf_ip['r1-eth0']), 
-                'next-hop-ip':Config.intf_ip['r1-eth1'], 
-                'src-exit-interface':'r2-eth0',
+                'dst-network':'65.0.0.0/8', 
+                'next-hop-ip':Config.intf_ip['r4-eth1'], 
+                'src-exit-interface':'r2-eth1'
             },
-            {
-                'node':'r2', 
-                'dst-network':get_network_addr(Config.intf_ip['r1-eth2']), 
-                'next-hop-ip':Config.intf_ip['r1-eth1'], 
-                'src-exit-interface':'r2-eth0',
-            },
+
             {
                 'node':'r2', 
                 'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r4-eth1'], 
-                'src-exit-interface':'r2-eth1',
+                'next-hop-ip':Config.intf_ip['r1-eth1'], 
+                'src-exit-interface':'r2-eth0'
             },
 
             {
                 'node':'r3', 
-                'dst-network':get_network_addr(Config.intf_ip['r1-eth0']), 
+                'dst-network':'62.0.0.0/8', 
                 'next-hop-ip':Config.intf_ip['r1-eth2'], 
-                'src-exit-interface':'r3-eth0',
+                'src-exit-interface':'r3-eth0'
             },
-            {
-                'node':'r3', 
-                'dst-network':get_network_addr(Config.intf_ip['r1-eth1']), 
-                'next-hop-ip':Config.intf_ip['r1-eth2'], 
-                'src-exit-interface':'r3-eth0',
-            },
+
             {
                 'node':'r3', 
                 'dst-network':'default', 
                 'next-hop-ip':Config.intf_ip['r4-eth2'], 
-                'src-exit-interface':'r3-eth1',
+                'src-exit-interface':'r3-eth1'
             },
 
-            {#un
+            {
                 'node':'r4', 
-                'dst-network':get_network_addr(Config.intf_ip['r3-eth0']), 
+                'dst-network':'default', 
                 'next-hop-ip':Config.intf_ip['r3-eth1'], 
                 'src-exit-interface':'r4-eth2'
             },
-            {#un
-                'node':'r4', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r2-eth1'], 
-                'src-exit-interface':'r4-eth1',
-            },
-
-            
             
         ]
 
