@@ -1,3 +1,18 @@
+from mininet.node import Node
+
+class LinuxRouter(Node):
+    def config(self, **params):
+        super(LinuxRouter, self).config(**params)
+
+        # Enable ip forwarding on the router so that packet at one interface is forwarded 
+        # to the appropriate interface on the same router
+        self.cmd('sysctl -w net.ipv4.ip_forward=1')
+
+    def terminate(self):
+        self.cmd('sysctl -w net.ipv4.ip_forward=0')
+        super(LinuxRouter, self).terminate()
+
+
 def get_network_addr(cidr):
     ip, subnet = cidr.split("/")
     subnet = int(subnet)
@@ -15,8 +30,8 @@ def get_network_addr(cidr):
     
     return ".".join(nw_addr)+"/"+str(subnet)
 
-#x = get_network_addr("64.0.123.2/22")
-#print(x)
+
+
     
     
 

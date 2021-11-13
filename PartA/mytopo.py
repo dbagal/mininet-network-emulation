@@ -1,23 +1,13 @@
+import os, sys
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
 from mininet.topo import Topo
 from mininet.net import Mininet
-from mininet.node import Node
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 from utils import *
-import multiprocessing
-
-
-class LinuxRouter(Node):
-    def config(self, **params):
-        super(LinuxRouter, self).config(**params)
-
-        # Enable ip forwarding on the router so that packet at one interface is forwarded 
-        # to the appropriate interface on the same router
-        self.cmd('sysctl -w net.ipv4.ip_forward=1')
-
-    def terminate(self):
-        self.cmd('sysctl -w net.ipv4.ip_forward=0')
-        super(LinuxRouter, self).terminate()
 
 
 class Config:
@@ -46,11 +36,9 @@ class Config:
             'h2': '65.0.0.2/8'
         }
 
-        # next-hop and src-interface should be on same network for ip-route to work
-        # you don't have to add routes between interfaces of the same router
-
+        # next-hop-interface and src-exit-interface should be on same network for 'ip route add' to work
+        # you don't have to add routes between interfaces of the same router, ip forwarding takes care of it
         Config.route_config = [
-
             {
                 'node':'h1', 
                 'dst-network':'default', 
@@ -130,6 +118,7 @@ class Config:
         ]
 
 
+
 class NetworkTopo(Topo):
 
     def build(self):
@@ -174,42 +163,8 @@ class NetworkTopo(Topo):
                     params2={'ip':Config.intf_ip['r4-eth2']})
 
 
-def run_server(net, buffer_size):
-    info( net['h2'].cmd('iperf -s -p 8000 -i1 | tee server_iperf_'+buffer_size+'.txt') )
-    
-
-def run_client(net, buffer_size):
-    info( net['h1'].cmd('iperf -c 65.0.0.2 -p 8000 -i1 -t10 | tee client_iperf_'+buffer_size+'.txt' ) )
-
-
-def log_performance(net, buffer_size):
-    info( net['r1'].cmd('tc qdisc add dev r1-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r1'].cmd('tc qdisc add dev r1-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r1'].cmd('tc qdisc add dev r1-eth2 root netem limit ' + buffer_size+ ' delay 30ms') )
-
-    info( net['r2'].cmd('tc qdisc add dev r2-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r2'].cmd('tc qdisc add dev r2-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
-
-    info( net['r3'].cmd('tc qdisc add dev r3-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r3'].cmd('tc qdisc add dev r3-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
-
-    info( net['r4'].cmd('tc qdisc add dev r4-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r4'].cmd('tc qdisc add dev r4-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r4'].cmd('tc qdisc add dev r4-eth2 root netem limit ' + buffer_size+ ' delay 30ms') )    
-
-    server = multiprocessing.Process(target=run_server, args=(net, buffer_size))
-    server.start()
-    client = multiprocessing.Process(target=run_client, args=(net, buffer_size))
-    client.start()
-    server.join()
-    client.join()
-    
 
 def run():
-    Config.setup()
-    topo = NetworkTopo()
-    net = Mininet(topo=topo)
-
     """ 
     NETWORK TOPOLOGY             
                             (0) [R2] (1)
@@ -221,8 +176,12 @@ def run():
                             (0) [R3] (1)
     """
 
-    # Add routing for reaching networks that aren't directly connected
+    # initialise the setup, create the topology and create the network from the topology
+    Config.setup()
+    topo = NetworkTopo()
+    net = Mininet(topo=topo)
 
+    # Add routing for reaching networks (network-id, NOT individual host-ids) that aren't directly connected
     for config in Config.route_config:
         src_interface = config['src-exit-interface']
         router = config['node']
@@ -230,11 +189,25 @@ def run():
         next_hop_interface = config['next-hop-ip']
         cmd = "ip route add "+dst_host+" via "+next_hop_interface.split("/")[0]+" dev "+src_interface.split("/")[0]
         info(net[router].cmd(cmd))
-
-    buffer_sizes = ['10240', '5242880', '26214400']
+    
     net.start()
-    log_performance(net, buffer_size=buffer_sizes[2])
-    CLI(net)
+    #net.pingAll()
+
+    # log routing tables for all routers
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+    if not os.path.exists(path): os.makedirs(path)
+
+    info(net['r1'].cmd('route -n | tee ' +path+ '/r1-routing-table.txt'))
+    info(net['r2'].cmd('route -n | tee ' +path+ '/r2-routing-table.txt'))
+    info(net['r3'].cmd('route -n | tee ' +path+ '/r3-routing-table.txt'))
+    info(net['r4'].cmd('route -n | tee ' +path+ '/r4-routing-table.txt'))
+
+    # log traceroute output between h1 and h2
+    info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +path+ '/traceroute-h1-h2.txt'))
+    info(net['h2'].cmd('traceroute -m 5 ' + Config.host_ip['h1'].split("/")[0] +' | tee ' +path+ '/traceroute-h2-h1.txt'))
+
+    # enable CLI(net) if you want to playaround with mininet commands after executing the script
+    #CLI(net)
     net.stop()
 
 
