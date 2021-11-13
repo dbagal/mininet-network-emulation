@@ -71,12 +71,19 @@ class Config:
             },
 
             {
+                'node':'r4', 
+                'dst-network':'default', 
+                'next-hop-ip':Config.intf_ip['r3-eth1'], 
+                'src-exit-interface':'r4-eth2'
+            },
+
+            {
                 'node':'r2', 
                 'dst-network':'65.0.0.0/8', 
                 'next-hop-ip':Config.intf_ip['r4-eth1'], 
                 'src-exit-interface':'r2-eth1'
             },
-
+  
             {
                 'node':'r2', 
                 'dst-network':'default', 
@@ -97,16 +104,8 @@ class Config:
                 'next-hop-ip':Config.intf_ip['r4-eth2'], 
                 'src-exit-interface':'r3-eth1'
             },
-
-            {
-                'node':'r4', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r3-eth1'], 
-                'src-exit-interface':'r4-eth2'
-            },
             
         ]
-
 
 
 class NetworkTopo(Topo):
@@ -129,24 +128,28 @@ class NetworkTopo(Topo):
 
         # linking routers amongst themselves
         self.addLink(r1,r2, 
-                    intfName1="r1-eth1", intfName2="r2-eth0", 
+                    intfName1="r1-eth1", 
+                    intfName2="r2-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth1']}, 
                     params2={'ip':Config.intf_ip['r2-eth0']})
 
         self.addLink(r1,r3, 
-                    intfName1="r1-eth2", intfName2="r3-eth0", 
+                    intfName1="r1-eth2", 
+                    intfName2="r3-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth2']}, 
                     params2={'ip':Config.intf_ip['r3-eth0']})
 
         self.addLink(r2,r4, 
-                    intfName1="r2-eth1", intfName2="r4-eth1", 
+                    intfName1="r2-eth1", 
+                    intfName2="r4-eth1", 
                     params1={'ip':Config.intf_ip['r2-eth1']}, 
-                    params2={'ip':Config.intf_ip['r4-eth2']})
+                    params2={'ip':Config.intf_ip['r4-eth1']})
 
         self.addLink(r3,r4, 
-                    intfName1="r3-eth1", intfName2="r4-eth2", 
+                    intfName1="r3-eth1", 
+                    intfName2="r4-eth2", 
                     params1={'ip':Config.intf_ip['r3-eth1']}, 
-                    params2={'ip':Config.intf_ip['r4-eth1']})
+                    params2={'ip':Config.intf_ip['r4-eth2']})
 
 
 def run():
@@ -154,7 +157,6 @@ def run():
     topo = NetworkTopo()
     net = Mininet(topo=topo)
 
-    
     """ 
     NETWORK TOPOLOGY             
                             (0) [R2] (1)
@@ -174,29 +176,11 @@ def run():
         dst_host = config['dst-network']
         next_hop_interface = config['next-hop-ip']
         cmd = "ip route add "+dst_host+" via "+next_hop_interface.split("/")[0]+" dev "+src_interface.split("/")[0]
-        print(cmd)
         info(net[router].cmd(cmd))
     
 
     net.start()
     #net.pingAll()
-    #info( '\n########### Routing Table of r1: ###########\n' )
-    #info( net['r1'].cmd('route') )
-
-    #info( '\n########### Routing Table of r2: ###########\n' )
-    #info( net['r2'].cmd('route') )
-
-    #info( '\n########### Routing Table of r3: ###########\n' )
-    #info( net['r3'].cmd('route') )
-
-    #info( '\n########### Routing Table of r4: ###########\n' )
-    #info( net['r4'].cmd('route') )
-
-    #info( '\n########### Tracing route h1 -> h2 ###########\n' )
-    #info( net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0]))
-
-    #info( '\n########### Tracing route h2 -> h1 ###########\n' )
-    #info( net['h2'].cmd('traceroute -m 5 ' + Config.host_ip['h1'].split("/")[0]))
     CLI(net)
     net.stop()
 

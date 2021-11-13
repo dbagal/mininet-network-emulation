@@ -21,5 +21,6 @@ sudo chown -R mininet:users /media/
 Switch to the super user first in order to run all the python files.
 ```
 sudo su
+cd /
 cd /media/sf_mininet-network-emulation
 ``` 
