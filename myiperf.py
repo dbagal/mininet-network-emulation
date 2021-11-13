@@ -4,6 +4,7 @@ from mininet.node import Node
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 from utils import *
+import multiprocessing
 
 
 class LinuxRouter(Node):
@@ -173,6 +174,37 @@ class NetworkTopo(Topo):
                     params2={'ip':Config.intf_ip['r4-eth2']})
 
 
+def run_server(net, buffer_size):
+    info( net['h2'].cmd('iperf -s -p 8000 -i1 | tee server_iperf_'+buffer_size+'.txt') )
+    
+
+def run_client(net, buffer_size):
+    info( net['h1'].cmd('iperf -c 65.0.0.2 -p 8000 -i1 -t10 | tee client_iperf_'+buffer_size+'.txt' ) )
+
+
+def log_performance(net, buffer_size):
+    info( net['r1'].cmd('tc qdisc add dev r1-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
+    info( net['r1'].cmd('tc qdisc add dev r1-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
+    info( net['r1'].cmd('tc qdisc add dev r1-eth2 root netem limit ' + buffer_size+ ' delay 30ms') )
+
+    info( net['r2'].cmd('tc qdisc add dev r2-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
+    info( net['r2'].cmd('tc qdisc add dev r2-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
+
+    info( net['r3'].cmd('tc qdisc add dev r3-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
+    info( net['r3'].cmd('tc qdisc add dev r3-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
+
+    info( net['r4'].cmd('tc qdisc add dev r4-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
+    info( net['r4'].cmd('tc qdisc add dev r4-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
+    info( net['r4'].cmd('tc qdisc add dev r4-eth2 root netem limit ' + buffer_size+ ' delay 30ms') )    
+
+    server = multiprocessing.Process(target=run_server, args=(net, buffer_size))
+    server.start()
+    client = multiprocessing.Process(target=run_client, args=(net, buffer_size))
+    client.start()
+    server.join()
+    client.join()
+    
+
 def run():
     Config.setup()
     topo = NetworkTopo()
@@ -198,10 +230,10 @@ def run():
         next_hop_interface = config['next-hop-ip']
         cmd = "ip route add "+dst_host+" via "+next_hop_interface.split("/")[0]+" dev "+src_interface.split("/")[0]
         info(net[router].cmd(cmd))
-    
 
+    buffer_sizes = ['10240', '5242880', '26214400']
     net.start()
-    #net.pingAll()
+    log_performance(net, buffer_size=buffer_sizes[2])
     CLI(net)
     net.stop()
 

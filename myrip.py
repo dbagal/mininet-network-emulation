@@ -4,6 +4,7 @@ from mininet.node import Node
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 from utils import *
+import os
 
 
 class LinuxRouter(Node):
@@ -44,89 +45,6 @@ class Config:
             'h1': '62.0.0.2/8',
             'h2': '65.0.0.2/8'
         }
-
-        # next-hop and src-interface should be on same network for ip-route to work
-        # you don't have to add routes between interfaces of the same router
-
-        Config.route_config = [
-
-            {
-                'node':'h1', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r1-eth0'], 
-                'src-exit-interface':'h1-eth0',
-            },
-            {
-                'node':'h2', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r4-eth0'], 
-                'src-exit-interface':'h2-eth0',
-            },
-
-            {
-                'node':'r1', 
-                'dst-network':'66.0.0.0/8', 
-                'next-hop-ip':Config.intf_ip['r3-eth0'], 
-                'src-exit-interface':'r1-eth2'
-            },
-            {
-                'node':'r1', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r2-eth0'], 
-                'src-exit-interface':'r1-eth1'
-            },
-
-            {
-                'node':'r2', 
-                'dst-network':'62.0.0.0/8', 
-                'next-hop-ip':Config.intf_ip['r1-eth1'], 
-                'src-exit-interface':'r2-eth0'
-            },
-            {
-                'node':'r2', 
-                'dst-network':'67.0.0.0/8', 
-                'next-hop-ip':Config.intf_ip['r1-eth1'], 
-                'src-exit-interface':'r2-eth0'
-            },
-            {
-                'node':'r2', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r4-eth1'], 
-                'src-exit-interface':'r2-eth1'
-            },
-
-            {
-                'node':'r3', 
-                'dst-network':'62.0.0.0/8', 
-                'next-hop-ip':Config.intf_ip['r1-eth2'], 
-                'src-exit-interface':'r3-eth0'
-            },
-            {
-                'node':'r3', 
-                'dst-network':'63.0.0.0/8', 
-                'next-hop-ip':Config.intf_ip['r1-eth2'], 
-                'src-exit-interface':'r3-eth0'
-            },
-            {
-                'node':'r3', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r4-eth2'], 
-                'src-exit-interface':'r3-eth1'
-            },
-            
-            {
-                'node':'r4', 
-                'dst-network':'67.0.0.0/8', 
-                'next-hop-ip':Config.intf_ip['r3-eth1'], 
-                'src-exit-interface':'r4-eth2'
-            },
-            {
-                'node':'r4', 
-                'dst-network':'default', 
-                'next-hop-ip':Config.intf_ip['r2-eth1'], 
-                'src-exit-interface':'r4-eth1'
-            },
-        ]
 
 
 class NetworkTopo(Topo):
@@ -188,20 +106,16 @@ def run():
                            \            /
                             (0) [R3] (1)
     """
-
-    # Add routing for reaching networks that aren't directly connected
-
-    for config in Config.route_config:
-        src_interface = config['src-exit-interface']
-        router = config['node']
-        dst_host = config['dst-network']
-        next_hop_interface = config['next-hop-ip']
-        cmd = "ip route add "+dst_host+" via "+next_hop_interface.split("/")[0]+" dev "+src_interface.split("/")[0]
-        info(net[router].cmd(cmd))
-    
-
     net.start()
     #net.pingAll()
+
+    info( net['r1'].cmd('bird -c ./r1/bird.conf') )
+
+    info( net['r2'].cmd('bird -c ./r2/bird.conf') )
+
+    info( net['r3'].cmd('bird -c ./r3/bird.conf') )
+
+    info( net['r4'].cmd('bird -c ./r4/bird.conf') )
     CLI(net)
     net.stop()
 
