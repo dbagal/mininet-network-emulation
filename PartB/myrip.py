@@ -1,3 +1,8 @@
+import os, sys
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.node import Node
@@ -109,13 +114,23 @@ def run():
     net.start()
     #net.pingAll()
 
-    info( net['r1'].cmd('bird -c ./r1/bird.conf') )
+    path = os.path.dirname(os.path.abspath(__file__))
 
-    info( net['r2'].cmd('bird -c ./r2/bird.conf') )
+    os.system("systemctl enable bird")
+    os.system("systemctl restart bird")
 
-    info( net['r3'].cmd('bird -c ./r3/bird.conf') )
+    os.chdir(os.path.join(path, "r1"))
+    info( net['r1'].cmd('bird ') )
 
-    info( net['r4'].cmd('bird -c ./r4/bird.conf') )
+    os.chdir(os.path.join(path, "r2"))
+    info( net['r2'].cmd('bird') )
+
+    os.chdir(os.path.join(path, "r3"))
+    info( net['r3'].cmd('bird') )
+
+    os.chdir(os.path.join(path, "r4"))
+    info( net['r4'].cmd('bird') )
+
     CLI(net)
     net.stop()
 

@@ -6,6 +6,7 @@ sys.path.append(parent_dir)
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.cli import CLI
+from mininet.link import TCLink
 from mininet.log import setLogLevel, info
 from utils import *
 import multiprocessing
@@ -136,29 +137,38 @@ class NetworkTopo(Topo):
         h2 = self.addHost('h2', intfName="h2-eth0", ip=Config.host_ip['h2'])
 
         # linking hosts to the routers
-        self.addLink(h1, r1, intfName2="r1-eth0", params2={'ip':Config.intf_ip['r1-eth0']})
-        self.addLink(h2, r4, intfName2="r4-eth0", params2={'ip':Config.intf_ip['r4-eth0']})
+        self.addLink(h1, r1, 
+                    cls=TCLink, bw=100, 
+                    intfName2="r1-eth0", params2={'ip':Config.intf_ip['r1-eth0']})
+
+        self.addLink(h2, r4, 
+                    cls=TCLink, bw=100,
+                    intfName2="r4-eth0", params2={'ip':Config.intf_ip['r4-eth0']})
 
         # linking routers amongst themselves
         self.addLink(r1,r2, 
+                    cls=TCLink, bw=100,
                     intfName1="r1-eth1", 
                     intfName2="r2-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth1']}, 
                     params2={'ip':Config.intf_ip['r2-eth0']})
 
         self.addLink(r1,r3, 
+                    cls=TCLink, bw=100,
                     intfName1="r1-eth2", 
                     intfName2="r3-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth2']}, 
                     params2={'ip':Config.intf_ip['r3-eth0']})
 
         self.addLink(r2,r4, 
+                    cls=TCLink, bw=100,
                     intfName1="r2-eth1", 
                     intfName2="r4-eth1", 
                     params1={'ip':Config.intf_ip['r2-eth1']}, 
                     params2={'ip':Config.intf_ip['r4-eth1']})
 
         self.addLink(r3,r4, 
+                    cls=TCLink, bw=100,
                     intfName1="r3-eth1", 
                     intfName2="r4-eth2", 
                     params1={'ip':Config.intf_ip['r3-eth1']}, 
@@ -179,19 +189,19 @@ def log_performance(net, buffer_size):
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
     if not os.path.exists(path): os.makedirs(path)
 
-    info( net['r1'].cmd('tc qdisc add dev r1-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r1'].cmd('tc qdisc add dev r1-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r1'].cmd('tc qdisc add dev r1-eth2 root netem limit ' + buffer_size+ ' delay 30ms') )
+    net['r1'].cmd('tc qdisc add dev r1-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r1'].cmd('tc qdisc add dev r1-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r1'].cmd('tc qdisc add dev r1-eth2 root netem limit ' + buffer_size+ ' delay 30ms') 
 
-    info( net['r2'].cmd('tc qdisc add dev r2-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r2'].cmd('tc qdisc add dev r2-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
+    net['r2'].cmd('tc qdisc add dev r2-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r2'].cmd('tc qdisc add dev r2-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
 
-    info( net['r3'].cmd('tc qdisc add dev r3-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r3'].cmd('tc qdisc add dev r3-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
+    net['r3'].cmd('tc qdisc add dev r3-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r3'].cmd('tc qdisc add dev r3-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
 
-    info( net['r4'].cmd('tc qdisc add dev r4-eth0 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r4'].cmd('tc qdisc add dev r4-eth1 root netem limit ' + buffer_size+ ' delay 30ms') )
-    info( net['r4'].cmd('tc qdisc add dev r4-eth2 root netem limit ' + buffer_size+ ' delay 30ms') )    
+    net['r4'].cmd('tc qdisc add dev r4-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r4'].cmd('tc qdisc add dev r4-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r4'].cmd('tc qdisc add dev r4-eth2 root netem limit ' + buffer_size+ ' delay 30ms')    
 
     server = multiprocessing.Process(target=run_server, args=(net, buffer_size, path))
     server.start()
@@ -230,7 +240,7 @@ def run():
     # initialize buffer sizes to 10Kb, 5Mb, 25Mb
     buffer_sizes = ['10240', '5242880', '26214400']
     net.start()
-    log_performance(net, buffer_size=buffer_sizes[0])
+    log_performance(net, buffer_size=buffer_sizes[2])
     CLI(net)
     net.stop()
 

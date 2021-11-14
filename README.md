@@ -75,3 +75,8 @@ sudo apt-get install iperf
 ```
 iperf h1 h2
 ```
+
+```
+sudo apt-get install flex
+sudo apt-get install bison
+```
