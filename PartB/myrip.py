@@ -103,23 +103,23 @@ def run():
 
     path = os.path.dirname(os.path.abspath(__file__))
 
-    os.system("systemctl enable bird")
-    os.system("systemctl restart bird")
+    #os.system("systemctl enable bird")
+    #os.system("systemctl restart bird")
 
     os.chdir(os.path.join(path, "r1"))
-    info( net['r1'].cmd('bird -c ' + os.path.join(path, "r1", "bird.conf")) )
+    info( net['r1'].cmd('sudo birdc -l') )
 
     os.chdir(os.path.join(path, "r2"))
-    info( net['r2'].cmd('bird -c ' + os.path.join(path, "r2", "bird.conf")) )
+    info( net['r2'].cmd('sudo birdc -l') )
 
     os.chdir(os.path.join(path, "r3"))
-    info( net['r3'].cmd('bird -c ' + os.path.join(path, "r3", "bird.conf")) )
+    info( net['r3'].cmd('sudo birdc -l') )
 
     os.chdir(os.path.join(path, "r4"))
-    info( net['r4'].cmd('bird -c ' + os.path.join(path, "r4", "bird.conf")) )
+    info( net['r4'].cmd('sudo birdc -l') )
 
     #net.configLinkStatus('r1','r2','down')
-
+    # kill -11 $(pidof bird)
     CLI(net)
     net.stop()
 

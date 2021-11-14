@@ -6,15 +6,16 @@
 
 # Adding a shared folder
 Add a shared folder (mininet-network-emulation) from the settings
+Add optical drive (VBoxGuestAdditions.iso) from Settings > Storage (Disk icon besides Controller:SCSI)
 
 # Commands to setup the shared folder
 ```
 sudo apt-get upgrade
-sudo apt-get virtualbox-guest-X11
-sudo apt-get virtualbox-guest-utils
-sudo apt-get virtualbox-guest-dkms
+sudo apt-get install virtualbox-guest-utils
+sudo apt-get install virtualbox-guest-dkms
 sudo usermod -aG vboxsf mininet
 sudo chown -R mininet:users /media/
+reboot
 ```
 
 # Locate the folder
@@ -28,10 +29,19 @@ cd /media/sf_mininet-network-emulation
 
 # Installing bird
 
-Install directly with apt-get instead of the repository as it leads to errors sometimes.
-The version of bird installed by apt-get will be 1.5.0 however. Latest version 2.0.8 is unavailable via apt-get.
+Install the following dependencies first
 ```
-sudo apt-get install bird
+sudo apt-get install flex
+sudo apt-get install bison
+sudo apt-get install libncurses-dev
+sudo apt-get libreadline-dev
+```
+
+Install bird using the following commands then
+```
+./configure
+make
+make install
 ```
 
 # Setting up configuration for RIP
@@ -65,7 +75,7 @@ systemctl enable bird
 systemctl restart bird
 ```
 
-# Installin Iperf
+# Installing Iperf
 
 ```
 sudo apt-get install iperf
@@ -74,9 +84,4 @@ sudo apt-get install iperf
 
 ```
 iperf h1 h2
-```
-
-```
-sudo apt-get install flex
-sudo apt-get install bison
 ```
