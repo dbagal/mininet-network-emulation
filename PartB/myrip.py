@@ -5,24 +5,11 @@ sys.path.append(parent_dir)
 
 from mininet.topo import Topo
 from mininet.net import Mininet
-from mininet.node import Node
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 from utils import *
 import os
 
-
-class LinuxRouter(Node):
-    def config(self, **params):
-        super(LinuxRouter, self).config(**params)
-
-        # Enable ip forwarding on the router so that packet at one interface is forwarded 
-        # to the appropriate interface on the same router
-        self.cmd('sysctl -w net.ipv4.ip_forward=1')
-
-    def terminate(self):
-        self.cmd('sysctl -w net.ipv4.ip_forward=0')
-        super(LinuxRouter, self).terminate()
 
 
 class Config:
@@ -120,16 +107,18 @@ def run():
     os.system("systemctl restart bird")
 
     os.chdir(os.path.join(path, "r1"))
-    info( net['r1'].cmd('bird ') )
+    info( net['r1'].cmd('bird -c ' + os.path.join(path, "r1", "bird.conf")) )
 
     os.chdir(os.path.join(path, "r2"))
-    info( net['r2'].cmd('bird') )
+    info( net['r2'].cmd('bird -c ' + os.path.join(path, "r2", "bird.conf")) )
 
     os.chdir(os.path.join(path, "r3"))
-    info( net['r3'].cmd('bird') )
+    info( net['r3'].cmd('bird -c ' + os.path.join(path, "r3", "bird.conf")) )
 
     os.chdir(os.path.join(path, "r4"))
-    info( net['r4'].cmd('bird') )
+    info( net['r4'].cmd('bird -c ' + os.path.join(path, "r4", "bird.conf")) )
+
+    #net.configLinkStatus('r1','r2','down')
 
     CLI(net)
     net.stop()
