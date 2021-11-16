@@ -27,6 +27,12 @@ cd /
 cd /media/sf_mininet-network-emulation
 ``` 
 
+# Installing traceroute
+
+```
+sudo apt-get install traceroute
+```
+
 # Installing bird
 
 Install the following dependencies first
@@ -42,6 +48,10 @@ Install bird using the following commands then
 ./configure
 make
 make install
+```
+
+```
+sudo chmod 4711 $(which bird)
 ```
 
 # Setting up configuration for RIP

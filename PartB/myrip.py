@@ -3,6 +3,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
+from contextlib import contextmanager
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.cli import CLI
@@ -10,13 +11,70 @@ from mininet.log import setLogLevel, info
 from utils import *
 import os
 
+class BirdRouter(Node):
+
+    @contextmanager
+    def in_router_dir(self):
+        
+        path = os.getcwd()
+        os.chdir(os.path.join(path, self.name))
+        yield
+        os.chdir(path)
+
+
+    def config(self, **params):
+        super(BirdRouter, self).config(**params)
+
+        self.cmd('sysctl net.ipv4.ip_forward=1')
+        with self.in_router_dir():
+            info(self.cmd('sudo bird -l'))
+        
+        #info(self.cmd('bird -c '+self.name+'.conf -s '+self.name+".ctl"))
+
+
+    def terminate(self):
+        self.cmd('sysctl net.ipv4.ip_forward=0')
+        with self.in_router_dir():
+            self.cmd('sudo birdc -l down')
+        
+        #info(self.cmd('birdc -s down'))
+
+        super(BirdRouter, self).terminate()
+
+
+class BirdHost(Node):
+
+    @contextmanager
+    def in_host_dir(self):
+        path = os.getcwd()
+        os.chdir(os.path.join(path, self.name))
+        yield
+        os.chdir(path)
+
+
+    def config(self, **params):
+        super(BirdHost, self).config(**params)
+
+        with self.in_host_dir():
+            info(self.cmd('sudo bird -l'))
+
+        #info(self.cmd('bird -c '+self.name+'.conf -s '+self.name+".ctl"))
+
+
+    def terminate(self):
+        with self.in_host_dir():
+            info(self.cmd('sudo birdc -l down'))
+
+        #info(self.cmd('birdc -s down'))
+
+        super(BirdHost, self).terminate()
+
 
 
 class Config:
     
     intf_ip = None
     host_ip = None
-    route_config = None
 
     @staticmethod
     def setup():
@@ -44,14 +102,14 @@ class NetworkTopo(Topo):
     def build(self):
 
         # Add 4 routers in two different subnets
-        r1 = self.addHost('r1', cls=LinuxRouter, ip=None)
-        r2 = self.addHost('r2', cls=LinuxRouter, ip=None)
-        r3 = self.addHost('r3', cls=LinuxRouter, ip=None)
-        r4 = self.addHost('r4', cls=LinuxRouter, ip=None)
+        r1 = self.addHost('r1', cls=BirdRouter, ip=None)
+        r2 = self.addHost('r2', cls=BirdRouter, ip=None)
+        r3 = self.addHost('r3', cls=BirdRouter, ip=None)
+        r4 = self.addHost('r4', cls=BirdRouter, ip=None)
 
         # Add hosts
-        h1 = self.addHost('h1', intfName="h1-eth0", ip=Config.host_ip['h1'])
-        h2 = self.addHost('h2', intfName="h2-eth0", ip=Config.host_ip['h2'])
+        h1 = self.addHost('h1', cls=BirdHost, intfName="h1-eth0", ip=Config.host_ip['h1'])
+        h2 = self.addHost('h2', cls=BirdHost, intfName="h2-eth0", ip=Config.host_ip['h2'])
 
         # linking hosts to the routers
         self.addLink(h1, r1, intfName2="r1-eth0", params2={'ip':Config.intf_ip['r1-eth0']})
@@ -85,8 +143,16 @@ class NetworkTopo(Topo):
 
 def run():
     Config.setup()
+
+    path = os.path.dirname(os.path.abspath(__file__))
+
+    log_path = os.path.join(path, "logs")
+    if not os.path.exists(log_path): os.makedirs(log_path)
+
+    os.chdir(path)
+
     topo = NetworkTopo()
-    net = Mininet(topo=topo)
+    net = Mininet(topo=topo, controller=None)
 
     """ 
     NETWORK TOPOLOGY             
@@ -101,25 +167,15 @@ def run():
     net.start()
     #net.pingAll()
 
-    path = os.path.dirname(os.path.abspath(__file__))
-
-    #os.system("systemctl enable bird")
-    #os.system("systemctl restart bird")
-
-    os.chdir(os.path.join(path, "r1"))
-    info( net['r1'].cmd('sudo birdc -l') )
-
-    os.chdir(os.path.join(path, "r2"))
-    info( net['r2'].cmd('sudo birdc -l') )
-
-    os.chdir(os.path.join(path, "r3"))
-    info( net['r3'].cmd('sudo birdc -l') )
-
-    os.chdir(os.path.join(path, "r4"))
-    info( net['r4'].cmd('sudo birdc -l') )
-
     #net.configLinkStatus('r1','r2','down')
     # kill -11 $(pidof bird)
+    # log routing tables for all routers
+    
+    info(net['r1'].cmd('route -n | tee ' +log_path+ '/r1-routing-table.txt'))
+    info(net['r2'].cmd('route -n | tee ' +log_path+ '/r2-routing-table.txt'))
+    info(net['r3'].cmd('route -n | tee ' +log_path+ '/r3-routing-table.txt'))
+    info(net['r4'].cmd('route -n | tee ' +log_path+ '/r4-routing-table.txt'))
+
     CLI(net)
     net.stop()
 
