@@ -1,4 +1,9 @@
 from mininet.node import Node
+from mininet.log import setLogLevel, info
+from contextlib import contextmanager
+import os
+
+setLogLevel('info')
 
 class LinuxRouter(Node):
     def config(self, **params):
@@ -11,6 +16,56 @@ class LinuxRouter(Node):
     def terminate(self):
         self.cmd('sysctl -w net.ipv4.ip_forward=0')
         super(LinuxRouter, self).terminate()
+
+
+class BirdRouter(Node):
+
+    @contextmanager
+    def in_router_dir(self): 
+        path = os.getcwd()
+        self.cmd('cd ../bird-conf/%s' % self.name)
+        yield
+        self.cmd('cd %s' % path)
+
+
+    def config(self, **params):
+        super(BirdRouter, self).config(**params)
+        
+        self.cmd('sysctl net.ipv4.ip_forward=1')
+        with self.in_router_dir():
+            info(self.cmd('sudo bird -l'))
+        
+
+    def terminate(self):
+        self.cmd('sysctl net.ipv4.ip_forward=0')
+        with self.in_router_dir():
+            self.cmd('sudo birdc -l down')
+
+        super(BirdRouter, self).terminate()
+
+
+class BirdHost(Node):
+
+    @contextmanager
+    def in_host_dir(self):
+        path = os.getcwd()
+        self.cmd('cd ../bird-conf/%s' % self.name)
+        yield
+        self.cmd('cd %s' % path)
+
+
+    def config(self, **params):
+        super(BirdHost, self).config(**params)
+        
+        with self.in_host_dir():
+            info(self.cmd('sudo bird -l'))
+
+
+    def terminate(self):
+        with self.in_host_dir():
+            info(self.cmd('sudo birdc -l down'))
+
+        super(BirdHost, self).terminate()
 
 
 def get_network_addr(cidr):

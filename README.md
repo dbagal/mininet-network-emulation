@@ -51,9 +51,6 @@ make
 make install
 ```
 
-```
-sudo chmod 4711 $(which bird)
-```
 
 # Setting up configuration for RIP
 
@@ -80,11 +77,6 @@ protocol rip {
 }
 ```
 
-Enable and restart bird
-```
-systemctl enable bird
-systemctl restart bird
-```
 
 # Installing Iperf
 

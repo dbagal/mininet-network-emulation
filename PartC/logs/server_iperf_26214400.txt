@@ -1,18 +1,22 @@
-------------------------------------------------------------
-Server listening on TCP port 8000
-TCP window size: 85.3 KByte (default)
-------------------------------------------------------------
-[  4] local 65.0.0.2 port 8000 connected with 62.0.0.2 port 34792
-[ ID] Interval       Transfer     Bandwidth
-[  4]  0.0- 1.0 sec   354 KBytes  2.90 Mbits/sec
-[  4]  1.0- 2.0 sec  2.76 MBytes  23.2 Mbits/sec
-[  4]  2.0- 3.0 sec  9.21 MBytes  77.3 Mbits/sec
-[  4]  3.0- 4.0 sec  10.4 MBytes  87.6 Mbits/sec
-[  4]  4.0- 5.0 sec  10.7 MBytes  89.5 Mbits/sec
-[  4]  5.0- 6.0 sec  10.2 MBytes  85.8 Mbits/sec
-[  4]  6.0- 7.0 sec  10.8 MBytes  90.2 Mbits/sec
-[  4]  7.0- 8.0 sec  10.8 MBytes  90.7 Mbits/sec
-[  4]  8.0- 9.0 sec  10.9 MBytes  91.2 Mbits/sec
-[  4]  9.0-10.0 sec  10.8 MBytes  90.7 Mbits/sec
-[  4] 10.0-11.0 sec  10.7 MBytes  89.9 Mbits/sec
-[  4]  0.0-11.2 sec   100 MBytes  74.8 Mbits/sec
+-----------------------------------------------------------
+Server listening on 8000
+-----------------------------------------------------------
+Accepted connection from 62.0.0.2, port 38878
+[  5] local 65.0.0.2 port 8000 connected to 62.0.0.2 port 38880
+[ ID] Interval           Transfer     Bandwidth
+[  5]   0.00-1.00   sec  76.4 KBytes   626 Kbits/sec                  
+[  5]   1.00-2.00   sec  1.04 MBytes  8.70 Mbits/sec                  
+[  5]   2.00-3.00   sec  8.31 MBytes  69.7 Mbits/sec                  
+[  5]   3.00-4.00   sec  10.8 MBytes  90.9 Mbits/sec                  
+[  5]   4.00-5.00   sec  10.7 MBytes  89.5 Mbits/sec                  
+[  5]   5.00-6.00   sec  10.7 MBytes  89.9 Mbits/sec                  
+[  5]   6.00-7.00   sec  10.7 MBytes  89.3 Mbits/sec                  
+[  5]   7.00-8.00   sec  10.8 MBytes  90.4 Mbits/sec                  
+[  5]   8.00-9.00   sec  10.8 MBytes  90.5 Mbits/sec                  
+[  5]   9.00-10.00  sec  10.7 MBytes  89.8 Mbits/sec                  
+[  5]  10.00-11.00  sec  4.10 MBytes  34.4 Mbits/sec                  
+[  5]  11.00-11.94  sec  3.04 MBytes  27.1 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  5]   0.00-11.94  sec  95.2 MBytes  66.9 Mbits/sec    0             sender
+[  5]   0.00-11.94  sec  91.7 MBytes  64.4 Mbits/sec                  receiver

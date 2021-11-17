@@ -1,13 +1,13 @@
 import os, sys
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
-
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 from utils import *
+
 
 
 class Config:
@@ -178,6 +178,14 @@ def run():
 
     # initialise the setup, create the topology and create the network from the topology
     Config.setup()
+
+    path = os.path.dirname(os.path.abspath(__file__))
+
+    log_path = os.path.join(path, "logs")
+    if not os.path.exists(log_path): os.makedirs(log_path)
+
+    os.chdir(path)
+
     topo = NetworkTopo()
     net = Mininet(topo=topo)
 
@@ -193,18 +201,16 @@ def run():
     net.start()
     #net.pingAll()
 
-    # log routing tables for all routers
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
-    if not os.path.exists(path): os.makedirs(path)
-
-    info(net['r1'].cmd('route -n | tee ' +path+ '/r1-routing-table.txt'))
-    info(net['r2'].cmd('route -n | tee ' +path+ '/r2-routing-table.txt'))
-    info(net['r3'].cmd('route -n | tee ' +path+ '/r3-routing-table.txt'))
-    info(net['r4'].cmd('route -n | tee ' +path+ '/r4-routing-table.txt'))
+    info(net['r1'].cmd('route -n | tee ' +log_path+ '/r1-routing-table.txt'))
+    info(net['r2'].cmd('route -n | tee ' +log_path+ '/r2-routing-table.txt'))
+    info(net['r3'].cmd('route -n | tee ' +log_path+ '/r3-routing-table.txt'))
+    info(net['r4'].cmd('route -n | tee ' +log_path+ '/r4-routing-table.txt'))
 
     # log traceroute output between h1 and h2
-    info(net['h1'].cmd('traceroute -m 5 h2 | tee ' +path+ '/traceroute-h1-h2.txt'))
-    info(net['h2'].cmd('traceroute -m 5 h1 | tee ' +path+ '/traceroute-h2-h1.txt'))
+    info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h1-h2.txt'))
+    info(net['h2'].cmd('traceroute -m 5 ' + Config.host_ip['h1'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h2-h1.txt'))
+
+    os.system("cp -r ./logs/* /media/sf_mininet-network-emulation/PartA/logs/")
 
     # enable CLI(net) if you want to playaround with mininet commands after executing the script
     #CLI(net)

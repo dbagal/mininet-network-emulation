@@ -1,64 +1,12 @@
 import os, sys, time
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
-
-from contextlib import contextmanager
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 from utils import *
-import os
-
-class BirdRouter(Node):
-
-    @contextmanager
-    def in_router_dir(self): 
-        path = os.getcwd()
-        self.cmd('cd ./bird-conf/%s' % self.name)
-        yield
-        self.cmd('cd %s' % path)
-
-
-    def config(self, **params):
-        super(BirdRouter, self).config(**params)
-        
-        self.cmd('sysctl net.ipv4.ip_forward=1')
-        with self.in_router_dir():
-            info(self.cmd('sudo bird -l'))
-        
-
-    def terminate(self):
-        self.cmd('sysctl net.ipv4.ip_forward=0')
-        with self.in_router_dir():
-            self.cmd('sudo birdc -l down')
-
-        super(BirdRouter, self).terminate()
-
-
-class BirdHost(Node):
-
-    @contextmanager
-    def in_host_dir(self):
-        path = os.getcwd()
-        self.cmd('cd ./bird-conf/%s' % self.name)
-        yield
-        self.cmd('cd %s' % path)
-
-
-    def config(self, **params):
-        super(BirdHost, self).config(**params)
-        
-        with self.in_host_dir():
-            info(self.cmd('sudo bird -l'))
-
-
-    def terminate(self):
-        with self.in_host_dir():
-            info(self.cmd('sudo birdc -l down'))
-
-        super(BirdHost, self).terminate()
 
 
 
@@ -156,28 +104,22 @@ def run():
                             (0) [R3] (1)
     """
     net.start()
-    #net.pingAll()
-
-    #
-    # kill -11 $(pidof bird)
-    # log routing tables for all routers
     
     info(net['r1'].cmd('route -n | tee ' +log_path+ '/r1-routing-table.txt'))
     info(net['r2'].cmd('route -n | tee ' +log_path+ '/r2-routing-table.txt'))
     info(net['r3'].cmd('route -n | tee ' +log_path+ '/r3-routing-table.txt'))
     info(net['r4'].cmd('route -n | tee ' +log_path+ '/r4-routing-table.txt'))
     
-    time.sleep(2)
+    time.sleep(10)
 
-    info(net['h1'].cmd('traceroute -m 5 h2 | tee ' +log_path+ '/traceroute-h1-h2-1.txt'))
-    
+    # since route -n is used, there is no dns resolution happening. hence traceroute is not able to identify h2. hence use h2 ip address
+    info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h1-h2-1.txt'))
     info(net.configLinkStatus('r1','r2','down'))
 
     time.sleep(5)
+    info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h1-h2-2.txt'))
 
-    info(net['h1'].cmd('traceroute -m 5 h2 | tee ' +log_path+ '/traceroute-h1-h2-2.txt'))
-
-    os.system("cp -r ./logs/* /media/sf_mininet-network-emulation/logs/")
+    os.system("cp -r ./logs/* /media/sf_mininet-network-emulation/PartB/logs/")
 
     CLI(net)
     net.stop()
