@@ -138,37 +138,37 @@ class NetworkTopo(Topo):
 
         # linking hosts to the routers
         self.addLink(h1, r1, 
-                    cls=TCLink, bw=100, 
+                    cls=TCLink, bw=100, delay="30ms", 
                     intfName2="r1-eth0", params2={'ip':Config.intf_ip['r1-eth0']})
 
         self.addLink(h2, r4, 
-                    cls=TCLink, bw=100,
+                    cls=TCLink, bw=100, delay="30ms",
                     intfName2="r4-eth0", params2={'ip':Config.intf_ip['r4-eth0']})
 
         # linking routers amongst themselves
         self.addLink(r1,r2, 
-                    cls=TCLink, bw=100,
+                    cls=TCLink, bw=100, delay="30ms",
                     intfName1="r1-eth1", 
                     intfName2="r2-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth1']}, 
                     params2={'ip':Config.intf_ip['r2-eth0']})
 
         self.addLink(r1,r3, 
-                    cls=TCLink, bw=100,
+                    cls=TCLink, bw=100, delay="30ms",
                     intfName1="r1-eth2", 
                     intfName2="r3-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth2']}, 
                     params2={'ip':Config.intf_ip['r3-eth0']})
 
         self.addLink(r2,r4, 
-                    cls=TCLink, bw=100,
+                    cls=TCLink, bw=100, delay="30ms",
                     intfName1="r2-eth1", 
                     intfName2="r4-eth1", 
                     params1={'ip':Config.intf_ip['r2-eth1']}, 
                     params2={'ip':Config.intf_ip['r4-eth1']})
 
         self.addLink(r3,r4, 
-                    cls=TCLink, bw=100,
+                    cls=TCLink, bw=100, delay="30ms",
                     intfName1="r3-eth1", 
                     intfName2="r4-eth2", 
                     params1={'ip':Config.intf_ip['r3-eth1']}, 
@@ -189,19 +189,19 @@ def log_performance(net, buffer_size):
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
     if not os.path.exists(path): os.makedirs(path)
 
-    net['r1'].cmd('tc qdisc add dev r1-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
-    net['r1'].cmd('tc qdisc add dev r1-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
-    net['r1'].cmd('tc qdisc add dev r1-eth2 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r1'].cmd('tc qdisc add dev r1-eth0 root netem limit ' + buffer_size) 
+    net['r1'].cmd('tc qdisc add dev r1-eth1 root netem limit ' + buffer_size) 
+    net['r1'].cmd('tc qdisc add dev r1-eth2 root netem limit ' + buffer_size) 
 
-    net['r2'].cmd('tc qdisc add dev r2-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
-    net['r2'].cmd('tc qdisc add dev r2-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r2'].cmd('tc qdisc add dev r2-eth0 root netem limit ' + buffer_size) 
+    net['r2'].cmd('tc qdisc add dev r2-eth1 root netem limit ' + buffer_size) 
 
-    net['r3'].cmd('tc qdisc add dev r3-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
-    net['r3'].cmd('tc qdisc add dev r3-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
+    net['r3'].cmd('tc qdisc add dev r3-eth0 root netem limit ' + buffer_size) 
+    net['r3'].cmd('tc qdisc add dev r3-eth1 root netem limit ' + buffer_size) 
 
-    net['r4'].cmd('tc qdisc add dev r4-eth0 root netem limit ' + buffer_size+ ' delay 30ms') 
-    net['r4'].cmd('tc qdisc add dev r4-eth1 root netem limit ' + buffer_size+ ' delay 30ms') 
-    net['r4'].cmd('tc qdisc add dev r4-eth2 root netem limit ' + buffer_size+ ' delay 30ms')    
+    net['r4'].cmd('tc qdisc add dev r4-eth0 root netem limit ' + buffer_size) 
+    net['r4'].cmd('tc qdisc add dev r4-eth1 root netem limit ' + buffer_size) 
+    net['r4'].cmd('tc qdisc add dev r4-eth2 root netem limit ' + buffer_size)    
 
     server = multiprocessing.Process(target=run_server, args=(net, buffer_size, path))
     server.start()
@@ -240,7 +240,7 @@ def run():
     # initialize buffer sizes to 10Kb, 5Mb, 25Mb
     buffer_sizes = ['10240', '5242880', '26214400']
     net.start()
-    log_performance(net, buffer_size=buffer_sizes[2])
+    log_performance(net, buffer_size=buffer_sizes[0])
     CLI(net)
     net.stop()
 

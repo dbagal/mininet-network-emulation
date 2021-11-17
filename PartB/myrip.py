@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, time
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
@@ -14,30 +14,25 @@ import os
 class BirdRouter(Node):
 
     @contextmanager
-    def in_router_dir(self):
-        
+    def in_router_dir(self): 
         path = os.getcwd()
-        os.chdir(os.path.join(path, self.name))
+        self.cmd('cd ./bird-conf/%s' % self.name)
         yield
-        os.chdir(path)
+        self.cmd('cd %s' % path)
 
 
     def config(self, **params):
         super(BirdRouter, self).config(**params)
-
+        
         self.cmd('sysctl net.ipv4.ip_forward=1')
         with self.in_router_dir():
             info(self.cmd('sudo bird -l'))
         
-        #info(self.cmd('bird -c '+self.name+'.conf -s '+self.name+".ctl"))
-
 
     def terminate(self):
         self.cmd('sysctl net.ipv4.ip_forward=0')
         with self.in_router_dir():
             self.cmd('sudo birdc -l down')
-        
-        #info(self.cmd('birdc -s down'))
 
         super(BirdRouter, self).terminate()
 
@@ -47,25 +42,21 @@ class BirdHost(Node):
     @contextmanager
     def in_host_dir(self):
         path = os.getcwd()
-        os.chdir(os.path.join(path, self.name))
+        self.cmd('cd ./bird-conf/%s' % self.name)
         yield
-        os.chdir(path)
+        self.cmd('cd %s' % path)
 
 
     def config(self, **params):
         super(BirdHost, self).config(**params)
-
+        
         with self.in_host_dir():
             info(self.cmd('sudo bird -l'))
-
-        #info(self.cmd('bird -c '+self.name+'.conf -s '+self.name+".ctl"))
 
 
     def terminate(self):
         with self.in_host_dir():
             info(self.cmd('sudo birdc -l down'))
-
-        #info(self.cmd('birdc -s down'))
 
         super(BirdHost, self).terminate()
 
@@ -167,7 +158,7 @@ def run():
     net.start()
     #net.pingAll()
 
-    #net.configLinkStatus('r1','r2','down')
+    #
     # kill -11 $(pidof bird)
     # log routing tables for all routers
     
@@ -175,6 +166,18 @@ def run():
     info(net['r2'].cmd('route -n | tee ' +log_path+ '/r2-routing-table.txt'))
     info(net['r3'].cmd('route -n | tee ' +log_path+ '/r3-routing-table.txt'))
     info(net['r4'].cmd('route -n | tee ' +log_path+ '/r4-routing-table.txt'))
+    
+    time.sleep(2)
+
+    info(net['h1'].cmd('traceroute -m 5 h2 | tee ' +log_path+ '/traceroute-h1-h2-1.txt'))
+    
+    info(net.configLinkStatus('r1','r2','down'))
+
+    time.sleep(5)
+
+    info(net['h1'].cmd('traceroute -m 5 h2 | tee ' +log_path+ '/traceroute-h1-h2-2.txt'))
+
+    os.system("cp -r ./logs/* /media/sf_mininet-network-emulation/logs/")
 
     CLI(net)
     net.stop()
@@ -183,3 +186,6 @@ def run():
 if __name__ == '__main__':
     setLogLevel('info')
     run()
+
+
+# maihan.wen@stonybrook.edu

@@ -23,8 +23,9 @@ reboot
 Switch to the super user first in order to run all the python files.
 ```
 sudo su
-cd /
 cd /media/sf_mininet-network-emulation
+mkdir /home/net
+cp -r /media/sf_mininet-network-emulation/* /home/net
 ``` 
 
 # Installing traceroute

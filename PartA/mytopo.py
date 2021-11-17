@@ -203,8 +203,8 @@ def run():
     info(net['r4'].cmd('route -n | tee ' +path+ '/r4-routing-table.txt'))
 
     # log traceroute output between h1 and h2
-    info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +path+ '/traceroute-h1-h2.txt'))
-    info(net['h2'].cmd('traceroute -m 5 ' + Config.host_ip['h1'].split("/")[0] +' | tee ' +path+ '/traceroute-h2-h1.txt'))
+    info(net['h1'].cmd('traceroute -m 5 h2 | tee ' +path+ '/traceroute-h1-h2.txt'))
+    info(net['h2'].cmd('traceroute -m 5 h1 | tee ' +path+ '/traceroute-h2-h1.txt'))
 
     # enable CLI(net) if you want to playaround with mininet commands after executing the script
     #CLI(net)

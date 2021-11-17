@@ -2,16 +2,16 @@
 Server listening on TCP port 8000
 TCP window size: 85.3 KByte (default)
 ------------------------------------------------------------
-[  4] local 65.0.0.2 port 8000 connected with 62.0.0.2 port 48528
+[  4] local 65.0.0.2 port 8000 connected with 62.0.0.2 port 34796
 [ ID] Interval       Transfer     Bandwidth
-[  4]  0.0- 1.0 sec  10.4 MBytes  87.2 Mbits/sec
-[  4]  1.0- 2.0 sec  10.4 MBytes  87.0 Mbits/sec
-[  4]  2.0- 3.0 sec  10.0 MBytes  84.3 Mbits/sec
-[  4]  3.0- 4.0 sec  10.5 MBytes  87.7 Mbits/sec
-[  4]  4.0- 5.0 sec  10.4 MBytes  87.2 Mbits/sec
-[  4]  5.0- 6.0 sec  10.4 MBytes  87.4 Mbits/sec
-[  4]  6.0- 7.0 sec  10.5 MBytes  88.1 Mbits/sec
-[  4]  7.0- 8.0 sec  10.5 MBytes  87.9 Mbits/sec
-[  4]  8.0- 9.0 sec  10.5 MBytes  87.8 Mbits/sec
-[  4]  9.0-10.0 sec  10.4 MBytes  87.6 Mbits/sec
-[  4]  0.0-10.1 sec   104 MBytes  87.2 Mbits/sec
+[  4]  0.0- 1.0 sec   368 KBytes  3.01 Mbits/sec
+[  4]  1.0- 2.0 sec  3.63 MBytes  30.5 Mbits/sec
+[  4]  2.0- 3.0 sec  11.0 MBytes  92.6 Mbits/sec
+[  4]  3.0- 4.0 sec  10.8 MBytes  90.7 Mbits/sec
+[  4]  4.0- 5.0 sec  10.7 MBytes  89.7 Mbits/sec
+[  4]  5.0- 6.0 sec  10.6 MBytes  88.5 Mbits/sec
+[  4]  6.0- 7.0 sec  10.6 MBytes  88.9 Mbits/sec
+[  4]  7.0- 8.0 sec  10.7 MBytes  89.8 Mbits/sec
+[  4]  8.0- 9.0 sec  10.4 MBytes  87.2 Mbits/sec
+[  4]  9.0-10.0 sec  10.6 MBytes  89.0 Mbits/sec
+[  4]  0.0-10.9 sec  99.2 MBytes  76.1 Mbits/sec
