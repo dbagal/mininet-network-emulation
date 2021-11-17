@@ -1,14 +1,46 @@
+# Mininet Network Emulation
 
-# Login
+This project implements a network topology using the mininet emulator. 
+Routing in the network is done by **BIRD** which is an inter-domain routing daemon.
+Finally network performance is measured using **iperf**
+
+**Programming Language:** *Python*
+
+# External libraries used
+
+- *mininet==2.3.0*
+- *traceroute==2.0.21*
+- *iperf3==3.0.11*
+- *BIRD==2.0.8*
+
+# Project structure
+
+- **bird-2.0.8/:** Folder containing files for the BIRD inter-routing unix daemon 
+- **bird-conf:** Folder containing configuration folders for every node in the topology
+- **folder-setup.sh:** Bash script for migrating the folder to a local folder in the VM
+- **install.sh:** Bash script for installing BIRD, traceroute and iperf3
+- **PartA/mytopo.py:** Python script for creating a basic network topology and adding static routes
+- **PartB/myrip.py:** Python script for running RIP routing protocol with BIRD on the network 
+- **PartC/myiperf.py:** Python script for measuring the performance of the network
+- **/logs:** Output logs of all the commands run for each part of the assignment 
+- **utils.py/:** Python file containing network utilities
+
+# Installation and setup
+
+- Download [Mininet VM](http://mininet.org/download/)
+
+## Login to mininet 
+
 **username:** mininet
 
 **password:** mininet
 
-# Adding a shared folder
-Add a shared folder (mininet-network-emulation) from the settings
-Add optical drive (VBoxGuestAdditions.iso) from Settings > Storage (Disk icon besides Controller:SCSI)
+## Adding a shared folder
 
-# Commands to setup the shared folder
+- Add a shared folder (named mininet-network-emulation) from the VirtualBox settings for the Guest OS
+- Add optical drive (VBoxGuestAdditions.iso) from Settings > Storage (Disk icon besides Controller:SCSI)
+
+## Commands to setup the shared folder inside the VM
 ```
 sudo apt-get upgrade
 sudo apt-get install virtualbox-guest-utils
@@ -18,73 +50,18 @@ sudo chown -R mininet:users /media/
 reboot
 ```
 
-# Locate the folder
+Copy the shared folder to a local folder inside the VM. This is a requirement for the BIRD service.
 
-Switch to the super user first in order to run all the python files.
 ```
 sudo su
-cd /media/sf_mininet-network-emulation
-mkdir /home/net
-cp -r /media/sf_mininet-network-emulation/* /home/net
+/media/sf_mininet-network-emulation/folder-setup.sh
+```
+
+## Installing requirements
+
+```
+sudo su
+/media/sf_mininet-network-emulation/install.sh
 ``` 
 
-# Installing traceroute
 
-```
-sudo apt-get install traceroute
-```
-
-# Installing bird
-
-Install the following dependencies first
-```
-sudo apt-get install flex
-sudo apt-get install bison
-sudo apt-get install libncurses-dev
-sudo apt-get libreadline-dev
-```
-
-Install bird using the following commands then
-```
-./configure
-make
-make install
-```
-
-
-# Setting up configuration for RIP
-
-Open the configuration file in edit mode
-```
-cd /
-nano /etc/bird/bird.conf
-```
-
-Add the following lines to the configuration file
-```
-protocol rip {
-        import all;
-        export all;
-        interface "eth*" {
-                metric 2;
-                port 1520;
-                mode multicast;
-                update time 12;
-                timeout time 60;
-                authentication cryptographic;
-                password "secret" { algorithm hmac sha256; };
-        };
-}
-```
-
-
-# Installing Iperf
-
-```
-sudo apt-get install iperf
-```
-# Testing bandwidth
-
-```
-iperf h1 h2
-```
