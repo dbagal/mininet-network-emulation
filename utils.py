@@ -8,7 +8,6 @@ setLogLevel('info')
 class LinuxRouter(Node):
     def config(self, **params):
         super(LinuxRouter, self).config(**params)
-
         # Enable ip forwarding on the router so that packet at one interface is forwarded 
         # to the appropriate interface on the same router
         self.cmd('sysctl -w net.ipv4.ip_forward=1')
@@ -19,10 +18,14 @@ class LinuxRouter(Node):
 
 
 class BirdRouter(Node):
+    # References: https://github.com/ssbgp/bird-mininet/blob/master/ex-oscillating-loop/init_mininet.py
 
     @contextmanager
     def in_router_dir(self): 
         path = os.getcwd()
+        # enter the conf directory for this particular router
+        # run bird
+        # exit the conf directory for this particular router
         self.cmd('cd ../bird-conf/%s' % self.name)
         yield
         self.cmd('cd %s' % path)
@@ -30,7 +33,8 @@ class BirdRouter(Node):
 
     def config(self, **params):
         super(BirdRouter, self).config(**params)
-        
+        # Enable ip forwarding on the router so that packet at one interface is forwarded 
+        # to the appropriate interface on the same router
         self.cmd('sysctl net.ipv4.ip_forward=1')
         with self.in_router_dir():
             info(self.cmd('sudo bird -l'))
@@ -40,14 +44,17 @@ class BirdRouter(Node):
         self.cmd('sysctl net.ipv4.ip_forward=0')
         with self.in_router_dir():
             self.cmd('sudo birdc -l down')
-
         super(BirdRouter, self).terminate()
 
 
 class BirdHost(Node):
+    # References: https://github.com/ssbgp/bird-mininet/blob/master/ex-oscillating-loop/init_mininet.py
 
     @contextmanager
     def in_host_dir(self):
+        # enter the conf directory for this particular router
+        # run bird
+        # exit the conf directory for this particular router
         path = os.getcwd()
         self.cmd('cd ../bird-conf/%s' % self.name)
         yield
@@ -56,7 +63,6 @@ class BirdHost(Node):
 
     def config(self, **params):
         super(BirdHost, self).config(**params)
-        
         with self.in_host_dir():
             info(self.cmd('sudo bird -l'))
 
@@ -64,11 +70,12 @@ class BirdHost(Node):
     def terminate(self):
         with self.in_host_dir():
             info(self.cmd('sudo birdc -l down'))
-
         super(BirdHost, self).terminate()
 
 
 def get_network_addr(cidr):
+    # get network address from cidr
+    # e.g: 172.68.0.1/24 => 172.168.0.0/24
     ip, subnet = cidr.split("/")
     subnet = int(subnet)
     subnet_mask_bits= [1,]*subnet + [0,]*(32-subnet)

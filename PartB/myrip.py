@@ -9,7 +9,6 @@ sys.path.append(parent_dir)
 from utils import *
 
 
-
 class Config:
     
     intf_ip = None
@@ -84,10 +83,10 @@ def run():
     Config.setup()
 
     path = os.path.dirname(os.path.abspath(__file__))
-
     log_path = os.path.join(path, "logs")
     if not os.path.exists(log_path): os.makedirs(log_path)
 
+    # change directory to PartB to run the code
     os.chdir(path)
 
     topo = NetworkTopo()
@@ -105,29 +104,36 @@ def run():
     """
     net.start()
     
+    # log routing tables
     info(net['r1'].cmd('route -n | tee ' +log_path+ '/r1-routing-table.txt'))
     info(net['r2'].cmd('route -n | tee ' +log_path+ '/r2-routing-table.txt'))
     info(net['r3'].cmd('route -n | tee ' +log_path+ '/r3-routing-table.txt'))
     info(net['r4'].cmd('route -n | tee ' +log_path+ '/r4-routing-table.txt'))
     
+    # wait for some time till BIRD sets up all the routes
     time.sleep(10)
 
-    # since route -n is used, there is no dns resolution happening. hence traceroute is not able to identify h2. hence use h2 ip address
+    # log traceroute from h1 to h2 
+    # note: since route -n is used, there is no dns resolution happening when displaying the routing tables. 
+    # hence traceroute is not able to identify h2. 
+    # hence use h2's ip address instead of its name 'h2'
     info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h1-h2-1.txt'))
+    
+    # take r1-r2 link down 
     info(net.configLinkStatus('r1','r2','down'))
-
+    
+    # wait for some time till BIRD sets up new routes after the link is taken down
     time.sleep(5)
     info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h1-h2-2.txt'))
 
+    # use this only in case of shared folder
+    # copy all log files from vm folder where the code is run to the shared folder
     os.system("cp -r ./logs/* /media/sf_mininet-network-emulation/PartB/logs/")
 
-    CLI(net)
+    #CLI(net)
     net.stop()
 
 
 if __name__ == '__main__':
     setLogLevel('info')
     run()
-
-
-# maihan.wen@stonybrook.edu

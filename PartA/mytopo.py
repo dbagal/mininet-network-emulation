@@ -9,7 +9,6 @@ sys.path.append(parent_dir)
 from utils import *
 
 
-
 class Config:
     
     intf_ip = None
@@ -118,7 +117,6 @@ class Config:
         ]
 
 
-
 class NetworkTopo(Topo):
 
     def build(self):
@@ -163,7 +161,6 @@ class NetworkTopo(Topo):
                     params2={'ip':Config.intf_ip['r4-eth2']})
 
 
-
 def run():
     """ 
     NETWORK TOPOLOGY             
@@ -180,10 +177,10 @@ def run():
     Config.setup()
 
     path = os.path.dirname(os.path.abspath(__file__))
-
     log_path = os.path.join(path, "logs")
     if not os.path.exists(log_path): os.makedirs(log_path)
 
+    # change directory to PartA to run the code
     os.chdir(path)
 
     topo = NetworkTopo()
@@ -199,8 +196,11 @@ def run():
         info(net[router].cmd(cmd))
     
     net.start()
+
+    # enable this to verify network connectivity
     #net.pingAll()
 
+    # log all routing tables
     info(net['r1'].cmd('route -n | tee ' +log_path+ '/r1-routing-table.txt'))
     info(net['r2'].cmd('route -n | tee ' +log_path+ '/r2-routing-table.txt'))
     info(net['r3'].cmd('route -n | tee ' +log_path+ '/r3-routing-table.txt'))
@@ -210,6 +210,8 @@ def run():
     info(net['h1'].cmd('traceroute -m 5 ' + Config.host_ip['h2'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h1-h2.txt'))
     info(net['h2'].cmd('traceroute -m 5 ' + Config.host_ip['h1'].split("/")[0] +' | tee ' +log_path+ '/traceroute-h2-h1.txt'))
 
+    # use this only in case of shared folder
+    # copy all log files from vm folder where the code is run to the shared folder
     os.system("cp -r ./logs/* /media/sf_mininet-network-emulation/PartA/logs/")
 
     # enable CLI(net) if you want to playaround with mininet commands after executing the script
