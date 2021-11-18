@@ -147,13 +147,12 @@ def run():
     time.sleep(10)
 
     # set buffer size for each of the router interfaces
-    # start measuring network performance
-
     buffer_size = buffer_sizes[0]
     for intf in list(Config.intf_ip.keys()):
         router = intf.split("-")[0]
         info(net[router].cmd('tc qdisc replace dev %s root netem limit %s delay 30ms loss 0.1%%'%(intf, buffer_size)))
     
+    # start measuring network performance
     log_performance(net, buffer_size, log_path)
 
     # use this only in case of shared folder
