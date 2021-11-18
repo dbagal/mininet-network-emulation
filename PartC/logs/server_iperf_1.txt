@@ -1,0 +1,12 @@
+-----------------------------------------------------------
+Server listening on 8000
+-----------------------------------------------------------
+Accepted connection from 62.0.0.2, port 41872
+[  5] local 65.0.0.2 port 8000 connected to 62.0.0.2 port 41874
+[ ID] Interval           Transfer     Bandwidth
+[  5]   0.00-10.00  sec  80.6 KBytes  66.0 Kbits/sec                  
+[  5]  10.00-11.17  sec  25.5 KBytes   179 Kbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  5]   0.00-11.17  sec   202 KBytes   148 Kbits/sec   30             sender
+[  5]   0.00-11.17  sec   106 KBytes  77.8 Kbits/sec                  receiver

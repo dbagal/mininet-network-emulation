@@ -17,7 +17,7 @@ Finally network performance is measured using **iperf**
 
 - **bird-2.0.8:** Folder containing files for the BIRD inter-routing unix daemon 
 - **bird-conf:** Folder containing configuration folders for every node in the topology
-- **documentation.pdf:** Analysis and results of the experiments
+- **documentation.pdf:** Analysis and results of all the parts
 - **folder-setup.sh:** Bash script for migrating the folder to a local folder in the VM
 - **install.sh:** Bash script for installing BIRD, traceroute and iperf3
 - **PartA/mytopo.py:** Python script for creating a basic network topology and adding static routes

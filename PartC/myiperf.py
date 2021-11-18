@@ -53,37 +53,37 @@ class NetworkTopo(Topo):
 
         # linking hosts to the routers
         self.addLink(h1, r1, 
-                    cls=TCLink, bw=100, delay="30ms",
+                    cls=TCLink, bw=100, delay='30ms',
                     intfName2="r1-eth0", params2={'ip':Config.intf_ip['r1-eth0']})
 
         self.addLink(h2, r4, 
-                    cls=TCLink, bw=100, delay="30ms",
+                    cls=TCLink, bw=100, delay='30ms',
                     intfName2="r4-eth0", params2={'ip':Config.intf_ip['r4-eth0']})
 
         # linking routers amongst themselves
         self.addLink(r1,r2, 
-                    cls=TCLink, bw=100, delay="30ms",
+                    cls=TCLink, bw=100, delay='30ms',
                     intfName1="r1-eth1", 
                     intfName2="r2-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth1']}, 
                     params2={'ip':Config.intf_ip['r2-eth0']})
 
         self.addLink(r1,r3, 
-                    cls=TCLink, bw=100, delay="30ms",
+                    cls=TCLink, bw=100, delay='30ms',
                     intfName1="r1-eth2", 
                     intfName2="r3-eth0", 
                     params1={'ip':Config.intf_ip['r1-eth2']}, 
                     params2={'ip':Config.intf_ip['r3-eth0']})
 
         self.addLink(r2,r4, 
-                    cls=TCLink, bw=100, delay="30ms",
+                    cls=TCLink, bw=100, delay='30ms',
                     intfName1="r2-eth1", 
                     intfName2="r4-eth1", 
                     params1={'ip':Config.intf_ip['r2-eth1']}, 
                     params2={'ip':Config.intf_ip['r4-eth1']})
 
         self.addLink(r3,r4, 
-                    cls=TCLink, bw=100, delay="30ms",
+                    cls=TCLink, bw=100, delay='30ms',
                     intfName1="r3-eth1", 
                     intfName2="r4-eth2", 
                     params1={'ip':Config.intf_ip['r3-eth1']}, 
@@ -93,22 +93,16 @@ class NetworkTopo(Topo):
 def run_server(net, buffer_size, path):
     # run server on port 8000
     # handle one client connection and exit (-1)
-    info( net['h2'].cmd('iperf3 -s -p 8000 -i10 -1 | tee '+path+'/server_iperf_'+buffer_size+'.txt') )
+    net['h2'].cmd('iperf3 -s -p 8000 -i10 -1 | tee '+path+'/server_iperf_'+buffer_size+'.txt') 
     
 
 def run_client(net, buffer_size, path):
     # run client and connect to the server on port 8000
-    info( net['h1'].cmd('iperf3 -c '+Config.host_ip['h2'].split("/")[0]+' -p 8000 -i10 -t10 | tee '+path+'/client_iperf_'+buffer_size+'.txt' ) )
+    net['h1'].cmd('iperf3 -c '+Config.host_ip['h2'].split("/")[0]+' -p 8000 -i10 -t10 | tee '+path+'/client_iperf_'+buffer_size+'.txt' ) 
 
 
 def log_performance(net, buffer_size, log_path):
-    interfaces = list(Config.intf_ip.keys())
-
-    # set buffer size for each of the router interfaces
-    for intf in interfaces:
-        router = intf.split("-")[0]
-        net[router].cmd('tc qdisc add dev %s tbf rate 100mbit burst 1mb limit %s'%(intf, buffer_size))    
-
+       
     # run the iperf server followed by the iperf client
     server = multiprocessing.Process(target=run_server, args=(net, buffer_size, log_path))
     server.start()
@@ -133,6 +127,8 @@ def run():
     # initialise the setup, create the topology and create the network from the topology
     Config.setup()
 
+    os.system("rm -r ./logs/*")
+
     path = os.path.dirname(os.path.abspath(__file__))
     log_path = os.path.join(path, "logs")
     if not os.path.exists(log_path): os.makedirs(log_path)
@@ -144,21 +140,27 @@ def run():
     net = Mininet(topo=topo, controller=None)
 
     # initialize buffer sizes to 10Kb, 5Mb, 25Mb
-    buffer_sizes = ['10kbit', '5mbit', '25mbit']
+    buffer_sizes = ['1', '437', '2185'] #['10kbit', '5mbit', '25mbit']
     net.start()
     
     # wait for some time till BIRD sets up all the routes
     time.sleep(10)
-    
+
+    # set buffer size for each of the router interfaces
     # start measuring network performance
-    for buffer_size in buffer_sizes:
-        log_performance(net, buffer_size, log_path)
+
+    buffer_size = buffer_sizes[0]
+    for intf in list(Config.intf_ip.keys()):
+        router = intf.split("-")[0]
+        info(net[router].cmd('tc qdisc replace dev %s root netem limit %s delay 30ms loss 0.1%%'%(intf, buffer_size)))
+    
+    log_performance(net, buffer_size, log_path)
 
     # use this only in case of shared folder
     # copy all log files from vm folder where the code is run to the shared folder
     os.system("cp -r ./logs/* /media/sf_mininet-network-emulation/PartC/logs/")
 
-    #CLI(net)
+    CLI(net)
     net.stop()
 
 
