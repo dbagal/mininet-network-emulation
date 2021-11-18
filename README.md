@@ -15,7 +15,7 @@ Finally network performance is measured using **iperf**
 
 # Project structure
 
-- **bird-2.0.8/:** Folder containing files for the BIRD inter-routing unix daemon 
+- **bird-2.0.8:** Folder containing files for the BIRD inter-routing unix daemon 
 - **bird-conf:** Folder containing configuration folders for every node in the topology
 - **folder-setup.sh:** Bash script for migrating the folder to a local folder in the VM
 - **install.sh:** Bash script for installing BIRD, traceroute and iperf3

@@ -1,0 +1,10 @@
+Connecting to host 65.0.0.2, port 8000
+[  4] local 62.0.0.2 port 52642 connected to 65.0.0.2 port 8000
+[ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+[  4]   0.00-10.00  sec  84.9 MBytes  71.2 Mbits/sec    0   6.57 MBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-10.00  sec  84.9 MBytes  71.2 Mbits/sec    0             sender
+[  4]   0.00-10.00  sec  80.1 MBytes  67.2 Mbits/sec                  receiver
+
+iperf Done.

@@ -93,12 +93,12 @@ class NetworkTopo(Topo):
 def run_server(net, buffer_size, path):
     # run server on port 8000
     # handle one client connection and exit (-1)
-    info( net['h2'].cmd('iperf3 -s -p 8000 -i1 -1 | tee '+path+'/server_iperf_'+buffer_size+'.txt') )
+    info( net['h2'].cmd('iperf3 -s -p 8000 -i10 -1 | tee '+path+'/server_iperf_'+buffer_size+'.txt') )
     
 
 def run_client(net, buffer_size, path):
     # run client and connect to the server on port 8000
-    info( net['h1'].cmd('iperf3 -c '+Config.host_ip['h2'].split("/")[0]+' -p 8000 -i1 -t10 | tee '+path+'/client_iperf_'+buffer_size+'.txt' ) )
+    info( net['h1'].cmd('iperf3 -c '+Config.host_ip['h2'].split("/")[0]+' -p 8000 -i10 -t10 | tee '+path+'/client_iperf_'+buffer_size+'.txt' ) )
 
 
 def log_performance(net, buffer_size, log_path):
@@ -107,7 +107,7 @@ def log_performance(net, buffer_size, log_path):
     # set buffer size for each of the router interfaces
     for intf in interfaces:
         router = intf.split("-")[0]
-        net[router].cmd('tc qdisc add dev %s root netem limit %s'%(intf, buffer_size))    
+        net[router].cmd('tc qdisc add dev %s tbf rate 100mbit burst 1mb limit %s'%(intf, buffer_size))    
 
     # run the iperf server followed by the iperf client
     server = multiprocessing.Process(target=run_server, args=(net, buffer_size, log_path))
@@ -144,14 +144,15 @@ def run():
     net = Mininet(topo=topo, controller=None)
 
     # initialize buffer sizes to 10Kb, 5Mb, 25Mb
-    buffer_sizes = ['10240', '5242880', '26214400']
+    buffer_sizes = ['10kbit', '5mbit', '25mbit']
     net.start()
     
     # wait for some time till BIRD sets up all the routes
     time.sleep(10)
     
     # start measuring network performance
-    log_performance(net, buffer_sizes[0], log_path)
+    for buffer_size in buffer_sizes:
+        log_performance(net, buffer_size, log_path)
 
     # use this only in case of shared folder
     # copy all log files from vm folder where the code is run to the shared folder
